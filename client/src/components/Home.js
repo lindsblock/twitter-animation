@@ -7,6 +7,7 @@ import {
   spring,
   presets,
 } from 'react-motion';
+import Moved from './Moved';
 
 class Home extends Component {
   state = { x: 250, y: 300, followers: [], moved: [] }
@@ -19,14 +20,20 @@ class Home extends Component {
   }
 
   dropFollower = () => {
-    let follower = this.state.followers[0];
-    let followers = [
-      ...this.state.followers.slice(1),
-      ...this.state.followers.length
-    ]
+    const { moved, x, y } = this.state;
+    const [drop, ...followers] = this.state.followers;
     this.setState({
       followers,
-      moved: [...this.state.moved, follower]
+      moved: [...moved, { x, y, transitioned: false, ...drop}]
+    });
+  }
+
+  addFollower = (id) => {
+    const { moved, followers } = this.state;
+    const follower = moved.find( f => f.id === id )
+    this.setState({
+      followers: [...followers, follower],
+      moved: moved.filter( m => m.id !== id )
     })
   }
 
@@ -51,28 +58,11 @@ class Home extends Component {
     const moveable = moved.filter( m => !m.transitioned )
     return moveable.map( follower => {
       return (
-        <Motion
+        <Moved
+          {...follower}
           key={follower.id}
-          defaultStyle={{ x: follower.x, y: follower.y }}
-        >
-          { avatar =>
-          <div
-            style={{
-              borderRadius: '99px',
-              backgroundColor: 'white',
-              width: '75px',
-              height: '75px',
-              border: '3px solid white',
-              position: 'absolute',
-              backgroundSize: '75px',
-              backgroundImage: `url(${follower.img})`,
-              transform: `translate3d(${follower.x - 100}px, ${follower.y - 100}px, 0)`,
-              zIndex: 10
-            }}
-          >
-          </div>
-          }
-        </Motion>
+          addFollower={this.addFollower}
+        />
       )
     })
   }
